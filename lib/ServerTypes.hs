@@ -11,9 +11,9 @@ data Request = Request RequestLine [Field] (Maybe Body)
 data Response = Response StatusLine [Field] (Maybe Body)
 
 -- Request related types
-data RequestLine = RequestLine Method RequestTarget Version
+data RequestLine = RequestLine Method RequestTarget Version deriving Show
 data Method = Get deriving Show
-type RequestTarget = ASCII StrictByteString
+type RequestTarget = ASCII StrictByteString 
 
 -- Response Related types
 data StatusLine = StatusLine Version StatusCode (Maybe ReasonPhrase)
@@ -21,7 +21,7 @@ data StatusCode = StatusCode Digit Digit Digit -- Need to find a way to only lim
 type ReasonPhrase = ASCII StrictByteString
 
 -- Common types
-data Version = Version Digit Digit
+data Version = Version Digit Digit deriving Show
 
 data Field = Field FieldName FieldValue
 type FieldName = ASCII StrictByteString
