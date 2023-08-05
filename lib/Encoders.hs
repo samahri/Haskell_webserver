@@ -56,18 +56,18 @@ status200 :: StatusCode
 status200 = StatusCode AD.Digit2 AD.Digit0 AD.Digit0
 
 -- Request encodings
-encodeRequestLine :: RequestLine -> BSB.Builder
-encodeRequestLine (RequestLine method target version) =
-    encodeMethod method <> A.fromCharList [Space]
-    <> encodeRequestTarget target <> A.fromCharList [Space]
-    <> encodeVersion version <> encodeLineEnd
+-- encodeRequestLine :: RequestLine -> BSB.Builder
+-- encodeRequestLine (RequestLine method target version) =
+--    encodeMethod method <> A.fromCharList [Space]
+--    <> encodeRequestTarget target <> A.fromCharList [Space]
+--    <> encodeVersion version <> encodeLineEnd
     
 
-encodeMethod :: Method -> BSB.Builder
-encodeMethod Get = BSB.byteString [A.string|GET|] 
+-- encodeMethod :: Method -> BSB.Builder
+-- encodeMethod Get = BSB.byteString [A.string|GET|] 
 
-encodeRequestTarget :: RequestTarget -> BSB.Builder
-encodeRequestTarget targetByteString = BSB.byteString $ A.lift targetByteString
+-- encodeRequestTarget :: RequestTarget -> BSB.Builder
+-- encodeRequestTarget targetByteString = BSB.byteString $ A.lift targetByteString
 
 -- common encoding
 encodeVersion :: Version -> BSB.Builder

@@ -5,13 +5,14 @@ import Data.ByteString (StrictByteString)
 import ASCII.Decimal (Digit (..))
 import Data.ByteString.Lazy (LazyByteString)
 import Data.Maybe (Maybe)
+import Text.Show (Show)
 
 data Request = Request RequestLine [Field] (Maybe Body)
 data Response = Response StatusLine [Field] (Maybe Body)
 
 -- Request related types
 data RequestLine = RequestLine Method RequestTarget Version
-data Method = Get
+data Method = Get deriving Show
 type RequestTarget = ASCII StrictByteString
 
 -- Response Related types

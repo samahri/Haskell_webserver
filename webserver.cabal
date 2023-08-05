@@ -30,12 +30,12 @@ common base
     ghc-options: -Wall -fdefer-typed-holes
     default-language: Haskell2010
     default-extensions: BlockArguments NoImplicitPrelude OverloadedStrings TypeApplications QuasiQuotes 
-    build-depends:    base ^>=4.16.4.0
+    build-depends:    base ^>=4.16.4.0, parsec >= 3.1.15.0
 
 library webserver-internal
     import:           base
     -- A list of modules added by this package
-    exposed-modules: MyServer ServerTypes Encoders
+    exposed-modules: MyServer ServerTypes Encoders Parsers
     hs-source-dirs: lib
     default-language: Haskell2010
     build-depends: relude ^>= 1.1 || ^>= 1.2, network-simple ^>= 0.4.5, ascii ^>= 1.7.0.1
