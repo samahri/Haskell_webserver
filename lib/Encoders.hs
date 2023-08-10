@@ -6,7 +6,6 @@ import ASCII.Char (Char(..))
 import Data.ByteString (StrictByteString)
 import qualified Data.ByteString.Builder as BSB
 import qualified Data.ByteString.Lazy as LBS
-import qualified ASCII.Decimal as AD
 import ServerTypes
 
 -- Response encoding
@@ -19,13 +18,13 @@ encodeBadRequestResponse = encodeResponse badRequestResponse
 okResponse :: Body -> Response
 okResponse responseBody = Response okStatusLine fields (Just responseBody)
    where
-     okStatusLine = StatusLine http_1_1 status200 (Just [A.string|OK|])
+     okStatusLine = StatusLine http1_1 status200 
      fields = [contentTypeHtml, contentLength responseBody]
 
 badRequestResponse :: Response
 badRequestResponse = Response badRequestStatusLine [] Nothing
     where
-      badRequestStatusLine = StatusLine http_1_1 status400 (Just [A.string|Bad Request|])
+      badRequestStatusLine = StatusLine http1_1 status400 
 
 encodeResponse :: Response -> StrictByteString
 encodeResponse (Response status fields bodyMaybe) = LBS.toStrict $ BSB.toLazyByteString $
@@ -35,12 +34,12 @@ encodeResponse (Response status fields bodyMaybe) = LBS.toStrict $ BSB.toLazyByt
     <> optionallyEncode encodeBody bodyMaybe
 
 encodeStatusLine :: StatusLine -> BSB.Builder
-encodeStatusLine (StatusLine version code reasonMaybe) =
-    encodeVersion version <> A.fromCharList [Space] <> encodeStatusCode code 
-    <> A.fromCharList [Space] <> optionallyEncode encodeReasonPhrase reasonMaybe <> encodeLineEnd
+encodeStatusLine (StatusLine version code) =
+    encodeVersion version <> A.fromCharList [Space] <> encodeStatusCode code <> encodeLineEnd
 
 encodeStatusCode :: StatusCode -> BSB.Builder
-encodeStatusCode (StatusCode x y z) = A.fromDigitList [x, y, z]
+encodeStatusCode (StatusCode (x,y,z) reasonMaybe) =
+    A.fromDigitList [x, y, z] <> A.fromCharList [Space] <> optionallyEncode encodeReasonPhrase reasonMaybe
 
 encodeReasonPhrase :: ReasonPhrase -> BSB.Builder
 encodeReasonPhrase reason = BSB.byteString $ A.lift reason
@@ -57,18 +56,9 @@ contentLength body = Field name value
     name = [A.string|Content-Length|]
     value = A.showIntegralDecimal $ LBS.length body
 
-http_1_1 :: Version
-http_1_1 = Version AD.Digit1 AD.Digit1
-
-status200 :: StatusCode
-status200 = StatusCode AD.Digit2 AD.Digit0 AD.Digit0
-
-status400 :: StatusCode
-status400 = StatusCode AD.Digit4 AD.Digit0 AD.Digit0
-
 -- common encoding
 encodeVersion :: Version -> BSB.Builder
-encodeVersion (Version x y) = [A.string|HTTP/|] <> A.fromDigitList [x] <> [A.string|.|] <> A.fromDigitList [y]
+encodeVersion (x,y) = [A.string|HTTP/|] <> A.fromDigitList [x] <> [A.string|.|] <> A.fromDigitList [y]
 
 encodeField :: Field -> BSB.Builder
 encodeField (Field fieldName fieldValue) = 

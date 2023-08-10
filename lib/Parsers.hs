@@ -6,7 +6,6 @@ import Data.ByteString (StrictByteString)
 import Text.ParserCombinators.Parsec
 import Text.Parsec (Parsec, crlf)
 import ServerTypes
-import qualified ASCII.Decimal as AD
 
 data ServerError = ServerRequestError ErrorType Text deriving Show
 data ErrorType = InvalidHTTPMethodError | ParseError deriving Show
@@ -44,4 +43,4 @@ requestTargetParser = do
 versionParser :: Parsec StrictByteString () Version
 versionParser = do
     void $ label (string "HTTP/1.1") (fail "invalid version")
-    return $ Version AD.Digit1 AD.Digit1 
+    return $ http1_1 
