@@ -1,4 +1,4 @@
-module Encoders(encodeOkResponse) where
+module Encoders(encodeOkResponse, encodeBadRequestResponse) where
 
 import Relude 
 import qualified ASCII as A
@@ -10,15 +10,29 @@ import qualified ASCII.Decimal as AD
 import ServerTypes
 
 -- Response encoding
+encodeOkResponse :: Body -> StrictByteString
+encodeOkResponse = encodeResponse . okResponse
+
+encodeBadRequestResponse :: StrictByteString
+encodeBadRequestResponse = encodeResponse badRequestResponse 
+
+okResponse :: Body -> Response
+okResponse responseBody = Response okStatusLine fields (Just responseBody)
+   where
+     okStatusLine = StatusLine http_1_1 status200 (Just [A.string|OK|])
+     fields = [contentTypeHtml, contentLength responseBody]
+
+badRequestResponse :: Response
+badRequestResponse = Response badRequestStatusLine [] Nothing
+    where
+      badRequestStatusLine = StatusLine http_1_1 status400 (Just [A.string|Bad Request|])
+
 encodeResponse :: Response -> StrictByteString
 encodeResponse (Response status fields bodyMaybe) = LBS.toStrict $ BSB.toLazyByteString $
     encodeStatusLine status 
     <> repeatedlyEncode (\x -> encodeField x <> encodeLineEnd) fields
     <> encodeLineEnd
     <> optionallyEncode encodeBody bodyMaybe
-
-encodeOkResponse :: Body -> StrictByteString
-encodeOkResponse = encodeResponse . okResponse
 
 encodeStatusLine :: StatusLine -> BSB.Builder
 encodeStatusLine (StatusLine version code reasonMaybe) =
@@ -30,12 +44,6 @@ encodeStatusCode (StatusCode x y z) = A.fromDigitList [x, y, z]
 
 encodeReasonPhrase :: ReasonPhrase -> BSB.Builder
 encodeReasonPhrase reason = BSB.byteString $ A.lift reason
-
-okResponse :: Body -> Response
-okResponse responseBody = Response okStatusLine fields (Just responseBody)
-   where
-     okStatusLine = StatusLine http_1_1 status200 (Just [A.string|OK|])
-     fields = [contentTypeHtml, contentLength responseBody]
 
 contentTypeHtml :: Field
 contentTypeHtml = Field name value
@@ -55,19 +63,8 @@ http_1_1 = Version AD.Digit1 AD.Digit1
 status200 :: StatusCode
 status200 = StatusCode AD.Digit2 AD.Digit0 AD.Digit0
 
--- Request encodings
--- encodeRequestLine :: RequestLine -> BSB.Builder
--- encodeRequestLine (RequestLine method target version) =
---    encodeMethod method <> A.fromCharList [Space]
---    <> encodeRequestTarget target <> A.fromCharList [Space]
---    <> encodeVersion version <> encodeLineEnd
-    
-
--- encodeMethod :: Method -> BSB.Builder
--- encodeMethod Get = BSB.byteString [A.string|GET|] 
-
--- encodeRequestTarget :: RequestTarget -> BSB.Builder
--- encodeRequestTarget targetByteString = BSB.byteString $ A.lift targetByteString
+status400 :: StatusCode
+status400 = StatusCode AD.Digit4 AD.Digit0 AD.Digit0
 
 -- common encoding
 encodeVersion :: Version -> BSB.Builder

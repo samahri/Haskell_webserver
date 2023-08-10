@@ -8,8 +8,14 @@ import Text.Parsec (Parsec, crlf)
 import ServerTypes
 import qualified ASCII.Decimal as AD
 
-parseRequestLine :: StrictByteString -> Either ParseError RequestLine 
-parseRequestLine = parse requestLineParser ""
+data ServerError = ServerRequestError ErrorType Text deriving Show
+data ErrorType = InvalidHTTPMethodError | ParseError deriving Show
+
+parseRequestLine :: StrictByteString -> Either ServerError RequestLine 
+parseRequestLine line = first toServerError result
+    where
+      result = parse requestLineParser "" line
+      toServerError err = ServerRequestError ParseError (show err)
 
 requestLineParser :: Parsec StrictByteString () RequestLine 
 requestLineParser = do
@@ -25,17 +31,17 @@ methodParser :: Parsec StrictByteString () Method
 methodParser = do
         meth <- many letter 
         case meth of 
-            "GET" -> return $ Get
-            _ -> fail "invalid method"
+            "GET" -> return Get
+            _ -> fail "invalid method" 
 
 requestTargetParser :: Parsec StrictByteString () RequestTarget
 requestTargetParser = do
-     requestTarget <- many1 $ choice [alphaNum, char '/']
+     requestTarget <- many1 $ noneOf [' '] 
      case A.validateString $ fromString requestTarget of
          Just asciiStr -> return asciiStr
          _ -> fail "invalid request target"  
 
 versionParser :: Parsec StrictByteString () Version
 versionParser = do
-    version <- string "HTTP/1.1"
-    if version == "HTTP/1.1" then return $ Version AD.Digit1 AD.Digit1 else fail "invalid version"
+    void $ label (string "HTTP/1.1") (fail "invalid version")
+    return $ Version AD.Digit1 AD.Digit1 

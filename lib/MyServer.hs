@@ -5,7 +5,7 @@ import Network.Simple.TCP (recv, serve, send, HostPreference (..), ServiceName)
 import qualified System.IO as IO
 import qualified Data.ByteString.Lazy as LBS
 import ServerTypes
-import Encoders (encodeOkResponse)
+import Encoders (encodeOkResponse, encodeBadRequestResponse)
 import Parsers(parseRequestLine)
 
 runServer :: IO ()
@@ -14,13 +14,17 @@ runServer = serve @IO localhost port8000 \(s, a) -> do
         headerMaybe <- recv s 100000 -- arbitrary length, for now
         case headerMaybe of
           Just headerInfo -> do
+              IO.putStrLn $ show headerInfo
               let requestLine = parseRequestLine headerInfo 
               case requestLine of
-                 Right method -> IO.putStrLn $ show method 
-                 Left e -> IO.putStrLn $ show e 
+                 Right method -> do
+                     IO.putStrLn $ show method 
+                     body <- readHtmlDoc
+                     send s $ encodeOkResponse body 
+                 Left e -> do
+                     IO.putStrLn $ show e 
+                     send s encodeBadRequestResponse
           Nothing -> LBS.putStr ""
-        body <- readHtmlDoc
-        send s $ encodeOkResponse body 
 
 
 readHtmlDoc:: IO Body
@@ -37,3 +41,7 @@ localhost = Host "127.0.0.1"
 
 port8000 :: ServiceName
 port8000 = "8000"
+
+requestLineLength :: Int
+requestLineLength = 8000 
+
