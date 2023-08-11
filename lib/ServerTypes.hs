@@ -8,7 +8,7 @@ import ASCII.Decimal (Digit (..))
 import Data.ByteString.Lazy (LazyByteString)
 import Text.Show (Show)
 
-data Request = Request RequestLine [Field] (Maybe Body)
+data Request = Request RequestLine [Field] (Maybe Body) deriving Show
 data Response = Response StatusLine [Field] (Maybe Body)
 
 -- Request related types
@@ -27,8 +27,8 @@ type Version = (Major, Minor)
 type Major = Digit
 type Minor = Digit
 
-data Field = Field FieldName FieldValue
-type FieldName = ASCII StrictByteString
+data Field = Field FieldName FieldValue deriving Show
+type FieldName = ASCII StrictByteString 
 type FieldValue = ASCII StrictByteString
 
 type Body = LazyByteString

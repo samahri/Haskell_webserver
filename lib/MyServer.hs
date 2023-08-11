@@ -7,6 +7,7 @@ import qualified Data.ByteString.Lazy as LBS
 import ServerTypes
 import Encoders (encodeOkResponse, encodeBadRequestResponse)
 import Parsers(parseRequestLine)
+import ASCII.Refinement as AR
 
 runServer :: IO ()
 runServer = serve @IO localhost port8000 \(s, a) -> do
@@ -15,26 +16,30 @@ runServer = serve @IO localhost port8000 \(s, a) -> do
         case headerMaybe of
           Just headerInfo -> do
               IO.putStrLn $ show headerInfo
-              let requestLine = parseRequestLine headerInfo 
-              case requestLine of
-                 Right method -> do
-                     IO.putStrLn $ show method 
-                     body <- readHtmlDoc
+              let requestHeader = parseRequestLine headerInfo 
+              case requestHeader of
+                 Right requestHeaderInfo -> do
+                     IO.putStrLn $ show requestHeaderInfo 
+                     let bodyPath = getPathFromRequest requestHeaderInfo
+                     body <- readHtmlDoc bodyPath
                      send s $ encodeOkResponse body 
                  Left e -> do
                      IO.putStrLn $ show e 
                      send s encodeBadRequestResponse
           Nothing -> LBS.putStr ""
 
-
-readHtmlDoc:: IO Body
-readHtmlDoc = do
-        handle <- IO.openFile htmlFilePath ReadMode
+readHtmlDoc:: RequestTarget -> IO Body
+readHtmlDoc path = do
+        let requestPath = htmlFilePath path
+        handle <- IO.openFile requestPath ReadMode
         body <- LBS.hGetContents handle
         return body
 
-htmlFilePath :: FilePath
-htmlFilePath = "html/index.html"
+getPathFromRequest :: Request -> RequestTarget
+getPathFromRequest (Request (RequestLine _ target _) _ _) = target 
+
+htmlFilePath :: RequestTarget -> FilePath
+htmlFilePath path = "html" <> (decodeUtf8 $ AR.lift path) <> "index.html"
 
 localhost :: HostPreference
 localhost = Host "127.0.0.1"

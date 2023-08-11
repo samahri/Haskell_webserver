@@ -38,7 +38,7 @@ library webserver-internal
     exposed-modules: MyServer ServerTypes Encoders Parsers
     hs-source-dirs: lib
     default-language: Haskell2010
-    build-depends: relude ^>= 1.1 || ^>= 1.2, network-simple ^>= 0.4.5, ascii ^>= 1.7.0.1
+    build-depends: relude ^>= 1.1 || ^>= 1.2, network-simple ^>= 0.4.5, ascii ^>= 1.7.0.1, utf8-string ^>= 1.0.1
     reexported-modules: Relude
   
 executable webserver
